@@ -1,0 +1,44 @@
+name: UltimateDimensions
+version: '1.0'
+main: de.tecca.ultimatedimensions.UltimateDimensions
+api-version: '1.21'
+load: STARTUP
+description: Custom Amethyst Dimension mit Oraxen-Support
+author: Tecca
+softdepend: [Oraxen]
+
+commands:
+  dimension:
+    description: Verwalte Amethyst-Dimensionen
+    usage: |-
+      §c/dimension create <name> [seed] - Erstelle eine neue Dimension
+      §c/dimension tp <name> - Teleportiere zu einer Dimension
+      §c/dimension delete <name> - Entlade eine Dimension
+      §c/dimension list - Liste alle Dimensionen
+    aliases: [dim, dimensions]
+
+permissions:
+  ultimatedimensions.*:
+    description: Alle UltimateDimensions Permissions
+    default: op
+    children:
+      ultimatedimensions.create: true
+      ultimatedimensions.teleport: true
+      ultimatedimensions.delete: true
+      ultimatedimensions.list: true
+
+  ultimatedimensions.create:
+    description: Erstelle Amethyst-Dimensionen
+    default: op
+
+  ultimatedimensions.teleport:
+    description: Teleportiere zu Dimensionen
+    default: op
+
+  ultimatedimensions.delete:
+    description: Entlade Dimensionen
+    default: op
+
+  ultimatedimensions.list:
+    description: Liste alle Dimensionen
+    default: op

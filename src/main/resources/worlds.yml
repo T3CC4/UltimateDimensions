@@ -1,0 +1,10 @@
+# UltimateDimensions - Welten-Konfiguration
+# Diese Datei wird automatisch verwaltet
+
+# Gespeicherte Welten:
+# worlds:
+#   weltname:
+#     seed: 123456789
+#     environment: NETHER
+
+worlds: {}

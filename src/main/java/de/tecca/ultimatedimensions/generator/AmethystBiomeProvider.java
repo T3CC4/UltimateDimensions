@@ -1,0 +1,140 @@
+package de.tecca.ultimatedimensions.generator;
+
+import org.bukkit.block.Biome;
+import org.bukkit.generator.BiomeProvider;
+import org.bukkit.generator.WorldInfo;
+import org.bukkit.util.noise.SimplexOctaveGenerator;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Custom BiomeProvider für Amethyst-Dimension
+ *
+ * Nutzt Vanilla-Biome für visuelle Effekte (Himmel-Farben, Partikel)
+ * Die eigentliche Terrain-Generation basiert auf Noise-Zonen, nicht auf Biomes
+ *
+ * Biom-Mapping:
+ * - WARPED_FOREST: Lila/Cyan - Hauptbiom (normale Dichte)
+ * - CRIMSON_FOREST: Rot - Geode-Zonen (hohe Dichte)
+ * - SOUL_SAND_VALLEY: Türkis - Kristall-Felder (viele Cluster)
+ * - BASALT_DELTAS: Grau/Schwarz - Tiefe Zonen (mehr Gestein)
+ */
+public class AmethystBiomeProvider extends BiomeProvider {
+
+    private final SimplexOctaveGenerator biomeNoise;
+    private final SimplexOctaveGenerator detailNoise;
+
+    // Vanilla-Biome für visuelle Vielfalt
+    private static final Biome MAIN_BIOME = Biome.WARPED_FOREST;
+    private static final Biome GEODE_BIOME = Biome.CRIMSON_FOREST;
+    private static final Biome CRYSTAL_BIOME = Biome.SOUL_SAND_VALLEY;
+    private static final Biome DEEP_BIOME = Biome.BASALT_DELTAS;
+
+    public AmethystBiomeProvider(long seed) {
+        this.biomeNoise = new SimplexOctaveGenerator(new Random(seed), 4);
+        this.biomeNoise.setScale(0.005); // Große Biom-Regionen
+
+        this.detailNoise = new SimplexOctaveGenerator(new Random(seed + 1000), 3);
+        this.detailNoise.setScale(0.02); // Details für Übergänge
+    }
+
+    @NotNull
+    @Override
+    public Biome getBiome(@NotNull WorldInfo worldInfo, int x, int y, int z) {
+        double biomeValue = biomeNoise.noise(x, z, 0.5, 0.5, true);
+        double detailValue = detailNoise.noise(x, z, 0.5, 0.5, true);
+
+        // Tiefenbasierte Biom-Änderung
+        if (y < -20) {
+            if (biomeValue + detailValue * 0.3 > 0.5) {
+                return DEEP_BIOME;
+            }
+        }
+
+        double combined = biomeValue + detailValue * 0.4;
+
+        // Biom-Verteilung basierend auf Noise
+        if (combined < -0.3) {
+            return CRYSTAL_BIOME;
+        } else if (combined < 0.1) {
+            return MAIN_BIOME;
+        } else if (combined < 0.5) {
+            return GEODE_BIOME;
+        } else {
+            return detailValue > 0.6 ? DEEP_BIOME : MAIN_BIOME;
+        }
+    }
+
+    @NotNull
+    @Override
+    public List<Biome> getBiomes(@NotNull WorldInfo worldInfo) {
+        return Arrays.asList(
+                MAIN_BIOME,
+                GEODE_BIOME,
+                CRYSTAL_BIOME,
+                DEEP_BIOME
+        );
+    }
+
+    /**
+     * Berechnet Zone-Type basierend auf Noise (unabhängig von Biome-Enum)
+     * 0 = Normal, 1 = Geode, 2 = Crystal, 3 = Deep
+     */
+    public int getZoneType(int x, int z) {
+        double biomeValue = biomeNoise.noise(x, z, 0.5, 0.5, true);
+        double detailValue = detailNoise.noise(x, z, 0.5, 0.5, true);
+        double combined = biomeValue + detailValue * 0.4;
+
+        if (combined < -0.3) {
+            return 2; // Crystal
+        } else if (combined >= 0.1 && combined < 0.5) {
+            return 1; // Geode
+        } else if (detailValue > 0.6 && combined >= 0.5) {
+            return 3; // Deep
+        } else {
+            return 0; // Normal
+        }
+    }
+
+    /**
+     * Prüft ob an dieser Position eine Geode-Zone ist
+     */
+    public boolean isGeodeZone(int x, int z) {
+        return getZoneType(x, z) == 1;
+    }
+
+    /**
+     * Prüft ob an dieser Position ein Kristall-Feld ist
+     */
+    public boolean isCrystalField(int x, int z) {
+        return getZoneType(x, z) == 2;
+    }
+
+    /**
+     * Gibt Amethyst-Dichte-Multiplikator zurück
+     */
+    public double getAmethystDensityMultiplier(int x, int z) {
+        int zone = getZoneType(x, z);
+        switch (zone) {
+            case 1: return 1.8; // Geode
+            case 2: return 1.4; // Crystal
+            default: return 1.0; // Normal/Deep
+        }
+    }
+
+    /**
+     * Gibt den Zone-Namen für Debug/Info zurück
+     */
+    public String getZoneName(int x, int z) {
+        int zone = getZoneType(x, z);
+        switch (zone) {
+            case 1: return "Geode-Zone";
+            case 2: return "Kristall-Feld";
+            case 3: return "Tiefe Zone";
+            default: return "Normal";
+        }
+    }
+}
