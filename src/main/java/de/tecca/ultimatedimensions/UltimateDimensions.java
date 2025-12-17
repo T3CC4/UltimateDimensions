@@ -44,8 +44,8 @@ public class UltimateDimensions extends JavaPlugin {
         // Commands registrieren
         getCommand("dimension").setExecutor(new DimensionCommand(this));
 
-        // Gespeicherte Welten laden
-        loadSavedWorlds();
+        // Gespeicherte Welten VERZÖGERT laden (nach Server-Start)
+        Bukkit.getScheduler().runTask(this, this::loadSavedWorlds);
 
         getLogger().info("UltimateDimensions erfolgreich geladen!");
     }
@@ -106,6 +106,9 @@ public class UltimateDimensions extends JavaPlugin {
                 world = creator.createWorld();
                 if (world != null) {
                     world.setSpawnLocation(0, 64, 0);
+                    getLogger().info("Welt geladen: " + worldName);
+                } else {
+                    getLogger().warning("Konnte Welt nicht laden: " + worldName);
                 }
             }
         }

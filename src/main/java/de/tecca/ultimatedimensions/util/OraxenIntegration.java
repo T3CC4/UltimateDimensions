@@ -9,23 +9,6 @@ import java.util.*;
 
 /**
  * Integration mit Oraxen für Custom Ore-Generierung
- *
- * Konfigurationsbeispiel für Oraxen-Items:
- *
- * In plugins/Oraxen/items/ores.yml:
- *
- * amethyst_copper_ore:
- *   material: PAPER
- *   Pack:
- *     generate_model: true
- *     parent_model: block/cube_all
- *     textures:
- *       - custom/ores/amethyst_copper_ore
- *   Mechanics:
- *     noteblock:
- *       custom_variation: 1
- *       model: custom_ore_1
- *   rarity: COMMON  # Custom-Tag für diese Integration
  */
 public class OraxenIntegration {
 
@@ -38,26 +21,38 @@ public class OraxenIntegration {
 
     private void initialize() {
         try {
-            // Lade alle Oraxen-Items und sortiere sie nach Rarity
+            // Null-Check für Oraxen Items
             String[] allItems = OraxenItems.getItemNames();
+
+            if (allItems == null || allItems.length == 0) {
+                System.out.println("[UltimateDimensions] Oraxen: Keine Items gefunden (Oraxen noch nicht vollständig geladen)");
+                return;
+            }
 
             oresByRarity.put("common", new ArrayList<>());
             oresByRarity.put("rare", new ArrayList<>());
             oresByRarity.put("epic", new ArrayList<>());
 
             for (String itemId : allItems) {
+                if (itemId == null) continue;
+
                 // Nur Items die "ore" im Namen haben
                 if (itemId.toLowerCase().contains("ore")) {
-                    // Versuche Rarity aus dem Namen zu bestimmen
                     String rarity = determineRarity(itemId);
                     oresByRarity.get(rarity).add(itemId);
                 }
             }
 
-            initialized = true;
+            int totalOres = getOreCount();
+            if (totalOres > 0) {
+                initialized = true;
+                System.out.println("[UltimateDimensions] Oraxen: " + totalOres + " Custom Ores geladen");
+            } else {
+                System.out.println("[UltimateDimensions] Oraxen: Keine Custom Ores gefunden");
+            }
 
         } catch (Exception e) {
-            System.err.println("Fehler beim Initialisieren der Oraxen-Integration: " + e.getMessage());
+            System.err.println("[UltimateDimensions] Fehler beim Initialisieren der Oraxen-Integration: " + e.getMessage());
         }
     }
 
@@ -83,10 +78,6 @@ public class OraxenIntegration {
 
     /**
      * Gibt ein zufälliges Oraxen-Ore basierend auf der Rarity zurück
-     *
-     * @param random Random-Generator
-     * @param rarity "common", "rare", oder "epic"
-     * @return Material oder null falls keine Ores verfügbar
      */
     public Material getRandomOre(Random random, String rarity) {
         if (!initialized) return null;
@@ -112,29 +103,20 @@ public class OraxenIntegration {
             }
 
         } catch (Exception e) {
-            // Fehler beim Abrufen des Ore-Blocks, ignorieren und Vanilla zurückgeben
+            // Fehler beim Abrufen des Ore-Blocks, ignorieren
         }
 
         return null;
     }
 
-    /**
-     * Prüft ob Oraxen-Ores verfügbar sind
-     */
     public boolean hasOres() {
         return initialized && !oresByRarity.values().stream().allMatch(List::isEmpty);
     }
 
-    /**
-     * Gibt die Anzahl der verfügbaren Ores zurück
-     */
     public int getOreCount() {
         return oresByRarity.values().stream().mapToInt(List::size).sum();
     }
 
-    /**
-     * Debug-Methode: Listet alle gefundenen Ores
-     */
     public void printAvailableOres() {
         System.out.println("=== Oraxen Ores ===");
         for (Map.Entry<String, List<String>> entry : oresByRarity.entrySet()) {

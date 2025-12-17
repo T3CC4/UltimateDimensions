@@ -2,7 +2,6 @@ name: UltimateDimensions
 version: '1.0'
 main: de.tecca.ultimatedimensions.UltimateDimensions
 api-version: '1.21'
-load: STARTUP
 description: Custom Amethyst Dimension mit Oraxen-Support
 author: Tecca
 softdepend: [Oraxen]
@@ -26,6 +25,8 @@ permissions:
       ultimatedimensions.teleport: true
       ultimatedimensions.delete: true
       ultimatedimensions.list: true
+      ultimatedimensions.findbiome: true
+      ultimatedimensions.info: true
 
   ultimatedimensions.create:
     description: Erstelle Amethyst-Dimensionen
@@ -41,4 +42,12 @@ permissions:
 
   ultimatedimensions.list:
     description: Liste alle Dimensionen
+    default: op
+
+  ultimatedimensions.findbiome:
+    description: Finde Biome
+    default: op
+
+  ultimatedimensions.info:
+    description: Zeige Dimensions-Info
     default: op

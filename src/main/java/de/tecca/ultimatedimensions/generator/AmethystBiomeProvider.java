@@ -13,25 +13,18 @@ import java.util.Random;
 /**
  * Custom BiomeProvider für Amethyst-Dimension
  *
- * Nutzt Vanilla-Biome für visuelle Effekte (Himmel-Farben, Partikel)
- * Die eigentliche Terrain-Generation basiert auf Noise-Zonen, nicht auf Biomes
- *
- * Biom-Mapping:
- * - WARPED_FOREST: Lila/Cyan - Hauptbiom (normale Dichte)
- * - CRIMSON_FOREST: Rot - Geode-Zonen (hohe Dichte)
- * - SOUL_SAND_VALLEY: Türkis - Kristall-Felder (viele Cluster)
- * - BASALT_DELTAS: Grau/Schwarz - Tiefe Zonen (mehr Gestein)
+ * Generiert Terrain-Zonen die unabhängig vom Biome-System sind.
+ * Biomes werden nur als "Base" für Minecraft-Effekte verwendet,
+ * aber die eigentliche Terrain-Generation erfolgt über getZoneType().
  */
 public class AmethystBiomeProvider extends BiomeProvider {
 
     private final SimplexOctaveGenerator biomeNoise;
     private final SimplexOctaveGenerator detailNoise;
 
-    // Vanilla-Biome für visuelle Vielfalt
-    private static final Biome MAIN_BIOME = Biome.WARPED_FOREST;
-    private static final Biome GEODE_BIOME = Biome.CRIMSON_FOREST;
-    private static final Biome CRYSTAL_BIOME = Biome.SOUL_SAND_VALLEY;
-    private static final Biome DEEP_BIOME = Biome.BASALT_DELTAS;
+    // Base-Biome (für Minecraft-interne Effekte, nicht für Terrain)
+    // Wir verwenden ein neutrales Biome als Basis
+    private static final Biome BASE_BIOME = Biome.THE_VOID;
 
     public AmethystBiomeProvider(long seed) {
         this.biomeNoise = new SimplexOctaveGenerator(new Random(seed), 4);
@@ -44,39 +37,16 @@ public class AmethystBiomeProvider extends BiomeProvider {
     @NotNull
     @Override
     public Biome getBiome(@NotNull WorldInfo worldInfo, int x, int y, int z) {
-        double biomeValue = biomeNoise.noise(x, z, 0.5, 0.5, true);
-        double detailValue = detailNoise.noise(x, z, 0.5, 0.5, true);
-
-        // Tiefenbasierte Biom-Änderung
-        if (y < -20) {
-            if (biomeValue + detailValue * 0.3 > 0.5) {
-                return DEEP_BIOME;
-            }
-        }
-
-        double combined = biomeValue + detailValue * 0.4;
-
-        // Biom-Verteilung basierend auf Noise
-        if (combined < -0.3) {
-            return CRYSTAL_BIOME;
-        } else if (combined < 0.1) {
-            return MAIN_BIOME;
-        } else if (combined < 0.5) {
-            return GEODE_BIOME;
-        } else {
-            return detailValue > 0.6 ? DEEP_BIOME : MAIN_BIOME;
-        }
+        // Alle Chunks bekommen das gleiche Base-Biome
+        // Die eigentliche Variation erfolgt über getZoneType() im Generator
+        return BASE_BIOME;
     }
 
     @NotNull
     @Override
     public List<Biome> getBiomes(@NotNull WorldInfo worldInfo) {
-        return Arrays.asList(
-                MAIN_BIOME,
-                GEODE_BIOME,
-                CRYSTAL_BIOME,
-                DEEP_BIOME
-        );
+        // Nur ein Biome für Minecraft
+        return Arrays.asList(BASE_BIOME);
     }
 
     /**

@@ -230,43 +230,42 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length < 2) {
-            sender.sendMessage("§cNutzung: /dimension biome <typ>");
-            sender.sendMessage("§7Verfügbare Biome:");
-            sender.sendMessage("§e  - warped §7(Lila - Hauptbiom)");
-            sender.sendMessage("§e  - crimson §7(Rot - Geode-Zonen)");
-            sender.sendMessage("§e  - soul §7(Türkis - Kristall-Felder)");
-            sender.sendMessage("§e  - basalt §7(Grau - Tiefe Zonen)");
+            sender.sendMessage("§cNutzung: /dimension biome <zone>");
+            sender.sendMessage("§7Verfügbare Zonen:");
+            sender.sendMessage("§e  - normal §7(Standard Amethyst-Dichte)");
+            sender.sendMessage("§e  - geode §7(Hohe Dichte, schwebende Inseln)");
+            sender.sendMessage("§e  - crystal §7(Sehr viele Cluster)");
+            sender.sendMessage("§e  - deep §7(Mehr Gestein, dunkler)");
             return true;
         }
 
-        String biomeType = args[1].toLowerCase();
-        Biome targetBiome = null;
+        String zoneType = args[1].toLowerCase();
+        int targetZone = -1;
 
-        // Hole Biomes aus Registry
-        Registry<Biome> biomeRegistry = Bukkit.getRegistry(Biome.class);
-
-        if (biomeType.equals("warped") || biomeType.equals("warped_forest")) {
-            targetBiome = biomeRegistry.get(NamespacedKey.minecraft("warped_forest"));
-        } else if (biomeType.equals("crimson") || biomeType.equals("crimson_forest") || biomeType.equals("geode")) {
-            targetBiome = biomeRegistry.get(NamespacedKey.minecraft("crimson_forest"));
-        } else if (biomeType.equals("soul") || biomeType.equals("soul_sand_valley") || biomeType.equals("crystal")) {
-            targetBiome = biomeRegistry.get(NamespacedKey.minecraft("soul_sand_valley"));
-        } else if (biomeType.equals("basalt") || biomeType.equals("basalt_deltas") || biomeType.equals("deep")) {
-            targetBiome = biomeRegistry.get(NamespacedKey.minecraft("basalt_deltas"));
+        if (zoneType.equals("normal")) {
+            targetZone = 0;
+        } else if (zoneType.equals("geode")) {
+            targetZone = 1;
+        } else if (zoneType.equals("crystal")) {
+            targetZone = 2;
+        } else if (zoneType.equals("deep")) {
+            targetZone = 3;
         }
 
-        if (targetBiome == null) {
-            sender.sendMessage("§cUnbekanntes Biom: " + biomeType);
+        if (targetZone == -1) {
+            sender.sendMessage("§cUnbekannte Zone: " + zoneType);
             return true;
         }
 
-        sender.sendMessage("§7Suche nach §e" + getBiomeName(targetBiome) + "§7...");
+        sender.sendMessage("§7Suche nach §e" + getZoneDisplayName(targetZone) + "§7...");
 
         Location start = player.getLocation();
         int searchRadius = 5000;
         int stepSize = 16;
 
-        Biome finalTargetBiome = targetBiome;
+        int finalTargetZone = targetZone;
+        AmethystDimensionGenerator gen = (AmethystDimensionGenerator) world.getGenerator();
+        AmethystBiomeProvider provider = gen.getBiomeProvider();
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Location found = null;
@@ -275,9 +274,9 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
             for (int x = -searchRadius; x < searchRadius; x += stepSize) {
                 for (int z = -searchRadius; z < searchRadius; z += stepSize) {
                     Location checkLoc = new Location(world, start.getX() + x, 64, start.getZ() + z);
-                    Biome biome = world.getBiome(checkLoc);
+                    int zone = provider.getZoneType(checkLoc.getBlockX(), checkLoc.getBlockZ());
 
-                    if (biome.getKey().equals(finalTargetBiome.getKey())) {
+                    if (zone == finalTargetZone) {
                         double distance = start.distance(checkLoc);
                         if (distance < closestDistance && distance > 50) {
                             closestDistance = distance;
@@ -295,17 +294,27 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
                     int x = finalFound.getBlockX();
                     int z = finalFound.getBlockZ();
 
-                    sender.sendMessage("§a✓ Biom gefunden!");
+                    sender.sendMessage("§a✓ Zone gefunden!");
                     sender.sendMessage("§7Koordinaten: §e" + x + " / " + z);
                     sender.sendMessage("§7Distanz: §e" + String.format("%.0f", finalDistance) + " Blöcke");
                     sender.sendMessage("§7Teleport: §e/dimension tp " + world.getName() + " " + x + " 64 " + z);
                 } else {
-                    sender.sendMessage("§cKein " + getBiomeName(finalTargetBiome) + " in " + searchRadius + " Blöcken Umkreis gefunden!");
+                    sender.sendMessage("§cKeine " + getZoneDisplayName(finalTargetZone) + " in " + searchRadius + " Blöcken Umkreis gefunden!");
                 }
             });
         });
 
         return true;
+    }
+
+    private String getZoneDisplayName(int zone) {
+        switch (zone) {
+            case 0: return "Normal-Zone";
+            case 1: return "Geode-Zone";
+            case 2: return "Kristall-Feld";
+            case 3: return "Tiefe Zone";
+            default: return "Unbekannt";
+        }
     }
 
     private boolean handleInfo(CommandSender sender) {
@@ -328,7 +337,6 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
         }
 
         Location loc = player.getLocation();
-        Biome biome = world.getBiome(loc);
 
         AmethystDimensionGenerator gen = (AmethystDimensionGenerator) world.getGenerator();
         AmethystBiomeProvider provider = gen.getBiomeProvider();
@@ -342,11 +350,10 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
             zoneDesc = getZoneDescription(zoneType);
         }
 
-        sender.sendMessage("§6=== Dimensions-Info ===");
+        sender.sendMessage("§6=== Amethyst-Dimensions-Info ===");
         sender.sendMessage("§7Welt: §e" + world.getName());
         sender.sendMessage("§7Seed: §e" + world.getSeed());
         sender.sendMessage("§7Position: §e" + loc.getBlockX() + " / " + loc.getBlockY() + " / " + loc.getBlockZ());
-        sender.sendMessage("§7Visuelles Biom: §e" + getBiomeDisplayName(biome));
         sender.sendMessage("§7Terrain-Zone: §e" + zoneName);
         if (!zoneDesc.isEmpty()) {
             sender.sendMessage("§7" + zoneDesc);
@@ -356,19 +363,8 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
     }
 
     private String getBiomeDisplayName(Biome biome) {
-        String key = biome.getKey().getKey();
-
-        if (key.equals("warped_forest")) {
-            return "Warped Forest (Lila/Cyan)";
-        } else if (key.equals("crimson_forest")) {
-            return "Crimson Forest (Rot)";
-        } else if (key.equals("soul_sand_valley")) {
-            return "Soul Sand Valley (Türkis)";
-        } else if (key.equals("basalt_deltas")) {
-            return "Basalt Deltas (Grau)";
-        } else {
-            return biome.getKey().toString();
-        }
+        // Nicht mehr benötigt - alle Chunks haben THE_VOID
+        return "Amethyst Dimension";
     }
 
     private String getZoneDescription(int zoneType) {
@@ -383,22 +379,6 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
                 return "Tiefe Zone: Mehr Gestein, dunklere Atmosphäre";
             default:
                 return "";
-        }
-    }
-
-    private String getBiomeName(Biome biome) {
-        String key = biome.getKey().getKey();
-
-        if (key.equals("warped_forest")) {
-            return "Warped Forest";
-        } else if (key.equals("crimson_forest")) {
-            return "Crimson Forest";
-        } else if (key.equals("soul_sand_valley")) {
-            return "Soul Sand Valley";
-        } else if (key.equals("basalt_deltas")) {
-            return "Basalt Deltas";
-        } else {
-            return biome.getKey().toString();
         }
     }
 
@@ -424,7 +404,7 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        sender.sendMessage("§6=== Biom-Test ===");
+        sender.sendMessage("§6=== Zonen-Test ===");
         Location loc = player.getLocation();
         int startX = loc.getBlockX() - 50;
         int startZ = loc.getBlockZ() - 50;
@@ -440,7 +420,7 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        sender.sendMessage("§7Biom-Verteilung (100 Samples):");
+        sender.sendMessage("§7Zonen-Verteilung (100 Samples):");
         sender.sendMessage("§e  Normal: §f" + zoneCounts[0] + " §7(" + (zoneCounts[0]) + "%)");
         sender.sendMessage("§e  Geode: §f" + zoneCounts[1] + " §7(" + (zoneCounts[1]) + "%)");
         sender.sendMessage("§e  Crystal: §f" + zoneCounts[2] + " §7(" + (zoneCounts[2]) + "%)");
@@ -448,9 +428,6 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
 
         int currentZone = provider.getZoneType(loc.getBlockX(), loc.getBlockZ());
         sender.sendMessage("§7Deine Zone: §e" + provider.getZoneName(loc.getBlockX(), loc.getBlockZ()));
-
-        Biome biome = world.getBiome(loc);
-        sender.sendMessage("§7Visuelles Biom: §e" + biome.getKey().getKey());
 
         return true;
     }
@@ -492,8 +469,8 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage("§e/dimension tp <welt> [x y z] §7- Teleportiere zu einer Dimension");
         sender.sendMessage("§e/dimension delete <welt> §7- Entlade eine Dimension");
         sender.sendMessage("§e/dimension list §7- Liste alle Amethyst-Dimensionen");
-        sender.sendMessage("§e/dimension biome <typ> §7- Finde ein bestimmtes Biom");
-        sender.sendMessage("§e/dimension info §7- Zeige Info über aktuelle Dimension");
+        sender.sendMessage("§e/dimension biome <typ> §7- Finde Zone (normal/geode/crystal/deep)");
+        sender.sendMessage("§e/dimension info §7- Zeige Info über aktuelle Zone");
     }
 
     @Override
@@ -518,7 +495,7 @@ public class DimensionCommand implements CommandExecutor, TabCompleter {
             }
 
             if (args[0].equalsIgnoreCase("biome") || args[0].equalsIgnoreCase("findbiome")) {
-                return filterStartingWith(Arrays.asList("warped", "crimson", "soul", "basalt"), args[1]);
+                return filterStartingWith(Arrays.asList("normal", "geode", "crystal", "deep"), args[1]);
             }
         }
 

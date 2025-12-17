@@ -4,39 +4,24 @@
 generator:
   # Aktiviere Amethyst-Spikes (große Stalaktiten/Stalagmiten)
   amethyst-spikes: true
-
-  # Spike-Häufigkeit (0.0 - 1.0)
-  # Höhere Werte = mehr Spikes
   spike-frequency: 0.5
-
-  # Maximale Spike-Höhe
   max-spike-height: 15
-
-  # Schwebende Inseln aktivieren
   floating-islands: true
 
-# Biom-Einstellungen
-biomes:
-  # Aktiviere verschiedene Biome
+# Custom Zonen-System (unabhängig von Vanilla-Biomes)
+zones:
   enabled: true
-
-  # Biom-Verteilung (in Prozent, muss 100 ergeben)
   distribution:
-    warped-forest: 40    # Lila - Hauptbiom
-    crimson-forest: 25   # Rot - Geode-Zonen
-    soul-sand-valley: 25 # Türkis - Kristall-Felder
-    basalt-deltas: 10    # Grau - Tiefe Zonen
+    normal: 40      # Standard Amethyst-Dichte
+    geode: 25       # Hohe Dichte, schwebende Inseln
+    crystal: 25     # Extrem viele Cluster
+    deep: 10        # Mehr Gestein
 
 # Feature-Kontrolle
 features:
-  # Amethyst-Cluster Spawn-Rate (multiplier)
   cluster-spawn-rate: 1.0
-
-  # Budding Amethyst Häufigkeit (multiplier)
   budding-amethyst-rate: 1.0
-
-  # Säulen-Generierung
   pillars: true
 
-# Debug-Mode
+# Debug-Mode (zeigt Zonen-Info in Logs)
 debug: false

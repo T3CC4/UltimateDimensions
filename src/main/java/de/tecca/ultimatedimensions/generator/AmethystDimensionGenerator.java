@@ -13,6 +13,18 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * AmethystDimensionGenerator - Custom Dimension Generator
+ *
+ * Generiert eine Amethyst-Dimension mit 4 Custom-Terrain-Zonen:
+ * - Normal-Zone: Standard Amethyst-Dichte (40%)
+ * - Geode-Zone: Hohe Dichte, schwebende Inseln (25%)
+ * - Kristall-Feld: Extreme Cluster-Dichte (25%)
+ * - Tiefe Zone: Mehr Gestein, weniger Amethyst (10%)
+ *
+ * Das System ist komplett unabhängig von Vanilla-Biomes.
+ * Alle Chunks verwenden THE_VOID als Basis-Biome.
+ */
 public class AmethystDimensionGenerator extends ChunkGenerator {
 
     private final UltimateDimensions plugin;
@@ -89,12 +101,12 @@ public class AmethystDimensionGenerator extends ChunkGenerator {
                 int absX = worldX + x;
                 int absZ = worldZ + z;
 
-                // Biom-basierte Modifikatoren
+                // Zonen-basierte Modifikatoren (Custom Terrain-Zonen)
                 double densityMultiplier = biomeProvider.getAmethystDensityMultiplier(absX, absZ);
                 boolean isGeodeZone = biomeProvider.isGeodeZone(absX, absZ);
                 boolean isCrystalField = biomeProvider.isCrystalField(absX, absZ);
 
-                // Nether-ähnlicher Boden mit Biom-Variation
+                // Variierender Boden je nach Zone
                 double floorValue = floorNoise.noise(absX, absZ, 0.5, 0.5, true);
                 int baseFloorHeight = (int) (floorValue * 30) + 32;
 
@@ -355,11 +367,11 @@ public class AmethystDimensionGenerator extends ChunkGenerator {
                 int absX = worldX + x;
                 int absZ = worldZ + z;
 
-                // Biom-basierte Cluster-Dichte
+                // Zonen-basierte Cluster-Dichte
                 boolean isGeodeZone = biomeProvider.isGeodeZone(absX, absZ);
                 boolean isCrystalField = biomeProvider.isCrystalField(absX, absZ);
 
-                // Cluster-Dichte basierend auf Noise und Biom
+                // Cluster-Dichte basierend auf Noise und Zone
                 double clusterDensity = clusterNoise.noise(absX, absZ, 0.5, 0.5, true);
                 boolean highDensity = clusterDensity > 0.6 || isCrystalField;
 
@@ -368,7 +380,7 @@ public class AmethystDimensionGenerator extends ChunkGenerator {
                     if (chunkData.getType(x, y, z) != Material.AIR
                             && chunkData.getType(x, y + 1, z) == Material.AIR) {
 
-                        // Mehr Cluster in speziellen Biomen
+                        // Mehr Cluster in speziellen Zonen
                         int clusterChance = isCrystalField ? 60 : (isGeodeZone ? 45 : (highDensity ? 40 : 25));
 
                         if (random.nextInt(100) < clusterChance) {
@@ -439,10 +451,11 @@ public class AmethystDimensionGenerator extends ChunkGenerator {
         }
     }
 
+    // WICHTIG: Diese Flags müssen korrekt gesetzt sein!
     @Override public boolean shouldGenerateNoise() { return false; }
     @Override public boolean shouldGenerateSurface() { return false; }
     @Override public boolean shouldGenerateCaves() { return true; }
     @Override public boolean shouldGenerateDecorations() { return false; }
-    @Override public boolean shouldGenerateStructures() { return true; }  // FIX: Verhindert Freeze bei locateNearestStructure()
+    @Override public boolean shouldGenerateStructures() { return true; }
     @Override public boolean shouldGenerateMobs() { return true; }
 }
