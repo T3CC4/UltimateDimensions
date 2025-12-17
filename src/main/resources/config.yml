@@ -1,21 +1,47 @@
 # UltimateDimensions Configuration
 
+# Dimensions-Typen Definition
+dimensions:
+  # Amethyst Dimension (built-in)
+  amethyst:
+    display_name: "Amethyst Crystal Dimension"
+    generator_class: "de.tecca.ultimatedimensions.dimensions.amethyst.AmethystDimensionGenerator"
+    environment: NETHER
+    features:
+      - custom_ores
+      - floating_islands
+      - crystal_caves
+    settings:
+      cluster_spawn_rate: 1.0
+      budding_amethyst_rate: 1.0
+      pillars: true
+
+  # Beispiel für zukünftige Dimension
+  # obsidian:
+  #   display_name: "Obsidian Wasteland"
+  #   generator_class: "de.tecca.ultimatedimensions.dimensions.obsidian.ObsidianDimensionGenerator"
+  #   environment: THE_END
+  #   features:
+  #     - lava_lakes
+  #     - obsidian_spikes
+  #   settings:
+  #     lava_level: 32
+
 # Generator-Einstellungen
 generator:
-  # Aktiviere Amethyst-Spikes (große Stalaktiten/Stalagmiten)
   amethyst-spikes: true
   spike-frequency: 0.5
   max-spike-height: 15
   floating-islands: true
 
-# Custom Zonen-System (unabhängig von Vanilla-Biomes)
+# Custom Zonen-System
 zones:
   enabled: true
   distribution:
-    normal: 40      # Standard Amethyst-Dichte
-    geode: 25       # Hohe Dichte, schwebende Inseln
-    crystal: 25     # Extrem viele Cluster
-    deep: 10        # Mehr Gestein
+    normal: 40
+    geode: 25
+    crystal: 25
+    deep: 10
 
 # Feature-Kontrolle
 features:
@@ -23,5 +49,5 @@ features:
   budding-amethyst-rate: 1.0
   pillars: true
 
-# Debug-Mode (zeigt Zonen-Info in Logs)
+# Debug-Mode
 debug: false
